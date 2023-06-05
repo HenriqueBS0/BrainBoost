@@ -1,0 +1,41 @@
+services:
+  server:
+    image: node:lts-alpine3.18
+    command: sh -c "yarn install && yarn run dev"
+    ports:
+      - 3000:3000
+    working_dir: /server
+    volumes:
+      - ./server/:/server
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER    : postgres
+      POSTGRES_DB      : brainboost
+      POSTGRES_PORT    : 5432
+  web:
+    image: node:lts-alpine3.18
+    command: sh -c "yarn install && yarn run dev"
+    ports:
+      - 8080:8080
+    working_dir: /web
+    volumes:
+      - ./web/:/web
+    environment:
+      SERVER_PORT: 3000
+  postgres:
+    image: postgres:16beta1-bullseye
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER    : postgres
+      POSTGRES_DB      : brainboost
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./server/database.sql:/docker-entrypoint-initdb.d/database.sql
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+volumes:
+  postgres-data:
