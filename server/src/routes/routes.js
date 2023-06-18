@@ -5,6 +5,7 @@
  */
 
 module.exports = function (fastify, options, done) {
+    fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
     fastify.register(require('./auth'));
     fastify.register(require('./study-lists'), { prefix: '/study-lists' });
     fastify.register(require('./concepts'), { prefix: '/concepts' });
