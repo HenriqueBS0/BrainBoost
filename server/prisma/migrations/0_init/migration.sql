@@ -20,3 +20,12 @@ CREATE TABLE concept (
     study_list_id INTEGER NOT NULL,
     FOREIGN KEY (study_list_id) REFERENCES study_list(id)
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "client_email_key" ON "client"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "concept_title_key" ON "concept"("title");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "study_list_title_key" ON "study_list"("title");

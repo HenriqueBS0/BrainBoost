@@ -4,7 +4,8 @@
   "description": "server app",
   "main": "src/index.js",
   "devDependencies": {
-    "nodemon": "2.0.22"
+    "nodemon": "2.0.22",
+    "prisma": "4.15.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,6 +14,7 @@
   "author": "HenriqueBS0",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "4.15.0",
     "fastify": "4.17.0"
   }
 }
