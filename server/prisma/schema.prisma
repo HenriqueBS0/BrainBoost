@@ -7,27 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model client {
-  id         Int          @id @default(autoincrement())
-  name       String       @db.Char(100)
-  email      String       @unique
+model Client {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(100)
+  email      String      @unique
   password   String
-  studyLists study_list[]
+  studyLists StudyList[]
+
+  @@map("client")
 }
 
-model concept {
-  id           Int        @id @default(autoincrement())
-  title        String     @unique @db.Char(100)
-  description  String
-  studyListId  Int
-  studyList    study_list @relation(fields: [studyListId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model study_list {
+model StudyList {
   id          Int       @id @default(autoincrement())
-  title       String    @unique @db.Char(100)
+  title       String    @unique @db.VarChar(100)
   description String
-  clientId   Int
-  concept     concept[]
-  client      client    @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clientId    Int       @map("client_id")
+  concept     Concept[]
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("study_list")
+}
+
+model Concept {
+  id          Int       @id @default(autoincrement())
+  title       String    @unique @db.VarChar(100)
+  description String
+  studyListId Int       @map("study_list_id")
+  studyList   StudyList @relation(fields: [studyListId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("concept")
 }
