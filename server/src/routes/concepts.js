@@ -1,3 +1,5 @@
+const { register, update, list, get, remove } = require('../controllers/concepts');
+
 /**
  * @param {import("fastify").FastifyInstance} fastify
  * @param {import("fastify").FastifyPluginOptions} options
@@ -5,10 +7,10 @@
  */
 module.exports = function(fastify, options, done) {
     fastify.addHook('preHandler', require('./middlewares/auth'));
-    fastify.get('/', function() {});
-    fastify.get('/:id', function() {});
-    fastify.post('/', function() {});
-    fastify.put('/:id', function() {});
-    fastify.delete('/:id', function() {});
+    fastify.get('/', list);
+    fastify.get('/:id', get);
+    fastify.post('/', register);
+    fastify.put('/:id', update);
+    fastify.delete('/:id', remove);
     done();
 }

@@ -5,9 +5,15 @@ const prisma = require("../lib/prisma")
  * @param {import("fastify").FastifyReply} reply 
  */
 async function register(request, reply) {
-    const { clientId, title, description } = request.body;
+    const { studyListId, title, description } = request.body;
 
-    await prisma.studyList.create({ data: { clientId, title, description } });
+    await prisma.concept.create({
+        data: {
+            studyListId: Number(studyListId),
+            title,
+            description
+        }
+    });
 
     reply.send();
 }
@@ -21,7 +27,7 @@ async function update(request, reply) {
 
     const id = Number(request.params.id);
 
-    await prisma.studyList.update({
+    await prisma.concept.update({
         where: { id },
         data: { title, description }
     });
@@ -34,9 +40,9 @@ async function update(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function list(request, reply) {
-    reply.send(await prisma.studyList.findMany({
+    reply.send(await prisma.concept.findMany({
         where: {
-            clientId: request.body.clientId
+            studyListId: request.body.studyListId
         },
         orderBy: {
             id: 'asc'
@@ -49,7 +55,7 @@ async function list(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function get(request, reply) {
-    reply.send(await prisma.studyList.findUnique({
+    reply.send(await prisma.concept.findUnique({
         where: { id: Number(request.params.id) }
     }));
 }
@@ -59,7 +65,7 @@ async function get(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function remove(request, reply) {
-    await prisma.studyList.delete({ where: { id: Number(request.params.id) } });
+    await prisma.concept.delete({ where: { id: Number(request.params.id) } });
     reply.send();
 }
 
