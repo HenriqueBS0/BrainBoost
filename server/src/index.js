@@ -4,7 +4,7 @@ const appRoutes = require('./routes/routes.js');
  * @type {import('fastify').FastifyInstance} Instance of Fastify
  */
 const fastify = require('fastify')({
-    logger: true
+    logger: false
 });
 
 fastify.register(appRoutes);
