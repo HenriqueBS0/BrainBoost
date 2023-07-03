@@ -1,5 +1,4 @@
 const generateQuestion = require("../lib/generator-questions");
-const { concept } = require("../lib/prisma");
 const prisma = require("../lib/prisma");
 
 /**

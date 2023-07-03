@@ -22,7 +22,10 @@ async function register(request, reply) {
         }
     });
 
-    const token = generate(client.id.toString());
+    const token = generate(JSON.stringify({
+        id: client.id,
+        time: (new Date().getTime()) + (1000*60*15)
+    }));
 
     reply.send({ token });
 }
@@ -46,7 +49,10 @@ async function access(request, reply) {
         return;
     }
 
-    const token = generate(client.id.toString());
+    const token = generate(JSON.stringify({
+        id: client.id,
+        time: new Date().getTime()
+    }));
 
     reply.send({ token });
 }
