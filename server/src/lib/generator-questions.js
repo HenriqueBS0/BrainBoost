@@ -33,20 +33,21 @@ async function generateQuestion(subject, term, correctDefinition) {
 
         try {
             const prompt = [
-                "Generate three incorrect alternatives in Portuguese for a multiple-choice question based on a subject, term, and its correct definition.",
+                "Generate four incorrect alternatives in Portuguese for a multiple-choice question based on a subject, term, and its correct definition.",
                 `Subject: ${subject}`,
                 `Term: ${term}`,
                 `Correct Definition: ${correctDefinition}`,
-                "Alternative 1 (Portuguese): [insert incorrect alternative in Portuguese here]",
-                "Alternative 2 (Portuguese): [insert incorrect alternative in Portuguese here]",
-                "Alternative 3 (Portuguese): [insert incorrect alternative in Portuguese here]"
+                "Alternative 1 (Portuguese): [insert incorrect alternative definition in Portuguese here]",
+                "Alternative 2 (Portuguese): [insert incorrect alternative definition in Portuguese here]",
+                "Alternative 3 (Portuguese): [insert incorrect alternative definition in Portuguese here]",
+                "Alternative 4 (Portuguese): [insert incorrect alternative definition in Portuguese here]"
             ].join('\n');
         
             const response = await openai.createCompletion({
                 model: "text-davinci-003",
                 prompt: prompt,
                 temperature: 1,
-                max_tokens: 256,
+                max_tokens: 450,
                 top_p: 1,
                 frequency_penalty: 0,
                 presence_penalty: 0,
@@ -62,7 +63,7 @@ async function generateQuestion(subject, term, correctDefinition) {
             const lines = textResponse.split("\n");
         
             lines.forEach(line => {
-                if(alternatives.length === 4) {
+                if(alternatives.length === 5) {
                     return;
                 }
         

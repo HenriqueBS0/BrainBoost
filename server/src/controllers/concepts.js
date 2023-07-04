@@ -1,4 +1,8 @@
 const prisma = require("../lib/prisma");
+const redis = require('../lib/redis');
+
+const conceptCacheListKey = studyListId => `concept-cache-list-${studyListId}`;
+const conceptCacheKey     = conceptId => `concept-cache-${conceptId}`;
 
 /**
  * @param {import("fastify").FastifyRequest} request 
@@ -15,6 +19,8 @@ async function register(request, reply) {
         }
     });
 
+    await redis.del(conceptCacheListKey(studyListId));
+
     reply.send();
 }
 
@@ -27,10 +33,13 @@ async function update(request, reply) {
 
     const id = Number(request.params.id);
 
-    await prisma.concept.update({
+    const concept = await prisma.concept.update({
         where: { id },
         data: { title, description }
     });
+
+    await redis.del(conceptCacheListKey(concept.studyListId));
+    await redis.del(conceptCacheKey(id));
 
     reply.send();
 }
@@ -40,14 +49,32 @@ async function update(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function list(request, reply) {
-    reply.send(await prisma.concept.findMany({
-        where: {
-            studyListId: request.body.studyListId
-        },
-        orderBy: {
-            id: 'asc'
-        }
-    }));
+
+    const studyListId = Number(request.query.studyListId);
+
+    console.log(studyListId);
+
+    const listKey = conceptCacheListKey(studyListId);
+
+    const listJson = await redis.get(listKey);
+
+    if(!listJson) {
+        const list = await prisma.concept.findMany({
+            where: {
+                studyListId: studyListId
+            },
+            orderBy: {
+                id: 'asc'
+            }
+        });
+
+        await redis.set(listKey, JSON.stringify(list));
+
+        reply.send(list);
+    }
+    else {
+        reply.send(JSON.parse(listJson));
+    }
 }
 
 /**
@@ -55,9 +82,24 @@ async function list(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function get(request, reply) {
-    reply.send(await prisma.concept.findUnique({
-        where: { id: Number(request.params.id) }
-    }));
+    const id = Number(request.params.id);
+
+    const conceptKey = conceptCacheKey(id);
+
+    const conceptJson = await redis.get(conceptKey);
+
+    if(!conceptJson) {
+        const concept = await prisma.concept.findUnique({
+            where: { id }
+        });
+
+        await redis.set(conceptKey, JSON.stringify(concept));
+
+        reply.send(concept);
+    }
+    else {
+        reply.send(JSON.parse(conceptJson));
+    }
 }
 
 /**
@@ -65,7 +107,14 @@ async function get(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function remove(request, reply) {
-    await prisma.concept.delete({ where: { id: Number(request.params.id) } });
+    const id =  Number(request.params.id);
+
+    const concept = await prisma.concept.findUnique({ where: { id } });
+    await prisma.concept.delete({ where: { id } });
+
+    await redis.del(conceptCacheListKey(concept.studyListId));
+    await redis.del(conceptCacheKey(id));
+
     reply.send();
 }
 

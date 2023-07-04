@@ -1,4 +1,8 @@
-const prisma = require("../lib/prisma")
+const prisma = require('../lib/prisma');
+const redis = require('../lib/redis');
+
+const studyListCacheListKey = clientId    => `study-list-cache-list-${clientId}`;
+const studyListCacheKey     = studyListId => `study-list-cache-${studyListId}`;  
 
 /**
  * @param {import("fastify").FastifyRequest} request 
@@ -9,6 +13,8 @@ async function register(request, reply) {
 
     await prisma.studyList.create({ data: { clientId, title, description } });
 
+    await redis.del(studyListCacheListKey(clientId));
+
     reply.send();
 }
 
@@ -17,7 +23,7 @@ async function register(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function update(request, reply) {
-    const { title, description } = request.body;
+    const { clientId, title, description } = request.body;
 
     const id = Number(request.params.id);
 
@@ -25,6 +31,9 @@ async function update(request, reply) {
         where: { id },
         data: { title, description }
     });
+
+    await redis.del(studyListCacheListKey(clientId));
+    await redis.del(studyListCacheKey(id));
 
     reply.send();
 }
@@ -34,14 +43,27 @@ async function update(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function list(request, reply) {
-    reply.send(await prisma.studyList.findMany({
-        where: {
-            clientId: request.body.clientId
-        },
-        orderBy: {
-            id: 'asc'
-        }
-    }));
+    const listKey = studyListCacheListKey(request.body.clientId);
+
+    const listJson = await redis.get(listKey);
+
+    if(!listJson) {
+        const list = await prisma.studyList.findMany({
+            where: {
+                clientId: request.body.clientId
+            },
+            orderBy: {
+                id: 'asc'
+            }
+        });
+
+        await redis.set(listKey, JSON.stringify(list));
+
+        reply.send(list);
+    }
+    else {
+        reply.send(JSON.parse(listJson));
+    }
 }
 
 /**
@@ -49,9 +71,25 @@ async function list(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function get(request, reply) {
-    reply.send(await prisma.studyList.findUnique({
-        where: { id: Number(request.params.id) }
-    }));
+
+    const id = Number(request.params.id);
+
+    const studyListKey = studyListCacheKey(id);
+
+    const studyListJson = await redis.get(studyListKey);
+
+    if(!studyListJson) {
+        const studyList = await prisma.studyList.findUnique({
+            where: { id }
+        });
+
+        await redis.set(studyListKey, JSON.stringify(studyList));
+
+        reply.send(studyList);
+    }
+    else {
+        reply.send(JSON.parse(studyListJson));
+    }
 }
 
 /**
@@ -59,7 +97,19 @@ async function get(request, reply) {
  * @param {import("fastify").FastifyReply} reply 
  */
 async function remove(request, reply) {
-    await prisma.studyList.delete({ where: { id: Number(request.params.id) } });
+
+    const clientId = request.body.clientId;
+    const id = Number(request.params.id);
+
+    await prisma.concept.deleteMany({
+        where: {studyListId: id}
+    });
+
+    await prisma.studyList.delete({ where: { id } });
+
+
+    await redis.del(studyListCacheListKey(clientId));
+    await redis.del(studyListCacheKey(id));
     reply.send();
 }
 
